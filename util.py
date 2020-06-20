@@ -61,6 +61,7 @@ def evaluate(model, dataset, args, sess):
         users = random.sample(xrange(1, usernum + 1), 10000)    # maximum sample 100000 users
     else:
         users = xrange(1, usernum + 1)
+    text_emb = np.load('data/reviews_emb.npy')
     for u in users:
 
         if len(train[u]) < 1 or len(test[u]) < 1: continue  # no train and
@@ -81,7 +82,7 @@ def evaluate(model, dataset, args, sess):
             while t in rated: t = np.random.randint(1, itemnum + 1)
             item_idx.append(t)  # get the 101 items, 100 negative items and 1 test item
 
-        predictions = -model.predict(sess, [u], [seq], item_idx)    # the reason that seq is shifted lies here, we make prediction on test item
+        predictions = -model.predict(sess, [u], [seq], item_idx, text_emb)    # the reason that seq is shifted lies here, we make prediction on test item
         predictions = predictions[0]
 
         rank = predictions.argsort().argsort()[0]
@@ -108,6 +109,7 @@ def evaluate_valid(model, dataset, args, sess):
         users = random.sample(xrange(1, usernum + 1), 10000)
     else:
         users = xrange(1, usernum + 1)
+    text_emb = np.load('data/reviews_emb.npy')
     for u in users:
         if len(train[u]) < 1 or len(valid[u]) < 1: continue
 
@@ -126,7 +128,7 @@ def evaluate_valid(model, dataset, args, sess):
             while t in rated: t = np.random.randint(1, itemnum + 1)
             item_idx.append(t)
 
-        predictions = -model.predict(sess, [u], [seq], item_idx)
+        predictions = -model.predict(sess, [u], [seq], item_idx, text_emb)
         predictions = predictions[0]
 
         rank = predictions.argsort().argsort()[0]

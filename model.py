@@ -120,6 +120,6 @@ class Model():
 
         self.merged = tf.summary.merge_all()
 
-    def predict(self, sess, u, seq, item_idx):
+    def predict(self, sess, u, seq, item_idx, text_emb):
         return sess.run(self.test_logits,
-                        {self.u: u, self.input_seq: seq, self.test_item: item_idx, self.is_training: False})
+                        {self.u: u, self.input_seq: seq, self.test_item: item_idx, self.text_emb: text_emb, self.is_training: False})

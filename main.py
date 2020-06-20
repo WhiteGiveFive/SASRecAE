@@ -69,7 +69,7 @@ try:
                                     {model.u: u, model.input_seq: seq, model.pos: pos, model.neg: neg,
                                      model.text_emb: text_emb, model.is_training: True})
 
-        if epoch % 20 == 0:
+        if epoch % 1 == 0:
             t1 = time.time() - t0
             T += t1
             print 'Evaluating',
