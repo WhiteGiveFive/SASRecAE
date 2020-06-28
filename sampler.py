@@ -49,7 +49,7 @@ def sample_function(user_train, usernum, itemnum, batch_size, maxlen, result_que
         for i in reversed(user_train[user][:-1]):   # using reverse because we want retrieve the most recent max-length items in users' historical sequence.
             seq[idx] = i
             pos[idx] = nxt
-            if nxt != 0: neg[idx] = random_neq(1, itemnum + 1, ts)  # generating one negative item example in neg[idx]
+            if nxt != 0: neg[idx] = random_neq(1, itemnum + 1, ts)  # randomly generating one negative item example in neg[idx]
             nxt = i # right shift version of seq for pos
             idx -= 1
             if idx == -1: break

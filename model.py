@@ -8,7 +8,7 @@ class Model():
         self.input_seq = tf.placeholder(tf.int32, shape=(None, args.maxlen))
         self.pos = tf.placeholder(tf.int32, shape=(None, args.maxlen))
         self.neg = tf.placeholder(tf.int32, shape=(None, args.maxlen))
-        self.text_emb = tf.placeholder(tf.float32, shape=[None, 300])  # my code
+        self.text_emb = tf.placeholder(tf.float32, shape=[None, 768])  # my code, 768 for bert, 300 for Word2Vec
         pos = self.pos
         neg = self.neg
         mask = tf.expand_dims(tf.to_float(tf.not_equal(self.input_seq, 0)), -1)

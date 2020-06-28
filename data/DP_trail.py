@@ -19,7 +19,7 @@ countU = defaultdict(lambda: 0) # create a defaultdict with default value 0, thi
 countP = defaultdict(lambda: 0) # create a defaultdict with default value 0, this dictionary is used to count #product
 line = 0
 
-dataset_name = 'Beauty'
+dataset_name = 'Video_Games'
 f = open('reviews_' + dataset_name + '.txt', 'w')
 for l in parse('reviews_' + dataset_name + '.json.gz'):
     line += 1
@@ -91,24 +91,24 @@ print usernum, itemnum
 # #users   itemid2 in #users history, the second most previous one
 # ...   ...
 
-f = open('Beauty.txt', 'w')
+f = open('Video.txt', 'w')
 for user in User.keys():
     for i in User[user]:
         f.write('%d %d\n' % (user, i[1]))
 f.close()
 
-f = open('item_reviews.txt', 'w')
+f = open('g_item_reviews.txt', 'w')
 for item in Item_reviews.keys():
     f.write('%d %s\n' % (item, ' '.join(Item_reviews[item])))
 f.close()
 
-f = open('item_summary.txt', 'w')
+f = open('g_item_summary.txt', 'w')
 for item in Item_summary.keys():
     f.write('%d %s\n' % (item, ' '.join(Item_summary[item])))
 f.close()
 
 header = ["item_id", "reviews"]
-with open('item_reviews.csv', 'w') as f:
+with open('g_item_reviews.csv', 'w') as f:
     writer = csv.writer(f)
     writer.writerow(header)
     for k, v in Item_reviews.items():
@@ -116,7 +116,7 @@ with open('item_reviews.csv', 'w') as f:
 f.close()
 
 header = ["item_id", "summary"]
-with open('item_summary.csv', 'w') as f:
+with open('g_item_summary.csv', 'w') as f:
     writer = csv.writer(f)
     writer.writerow(header)
     for k, v in Item_summary.items():
