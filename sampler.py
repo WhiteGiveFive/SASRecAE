@@ -43,7 +43,7 @@ def sample_function(user_train, usernum, itemnum, batch_size, maxlen, result_que
         pos = np.zeros([maxlen], dtype=np.int32)    # consisting of next item to each corresponding item in seq, a right shilfted version of seq
         neg = np.zeros([maxlen], dtype=np.int32)    # consisting of neg example to pos.
         nxt = user_train[user][-1]
-        idx = maxlen - 1    # index for seq, pos, neg
+        idx = maxlen - 1    # index for seq, pos, neg, a reverse style
 
         ts = set(user_train[user])
         for i in reversed(user_train[user][:-1]):   # using reverse because we want retrieve the most recent max-length items in users' historical sequence.

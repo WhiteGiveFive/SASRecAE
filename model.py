@@ -8,14 +8,14 @@ class Model():
         self.input_seq = tf.placeholder(tf.int32, shape=(None, args.maxlen))
         self.pos = tf.placeholder(tf.int32, shape=(None, args.maxlen))
         self.neg = tf.placeholder(tf.int32, shape=(None, args.maxlen))
-        self.text_emb = tf.placeholder(tf.float32, shape=[None, 768])  # my code, 768 for bert, 300 for Word2Vec
+        self.text_emb = tf.placeholder(tf.float32, shape=[57290, 768])  # my code, 768 for bert, 300 for Word2Vec
         pos = self.pos
         neg = self.neg
-        mask = tf.expand_dims(tf.to_float(tf.not_equal(self.input_seq, 0)), -1)
+        mask = tf.expand_dims(tf.to_float(tf.not_equal(self.input_seq, 0)), -1) # add one dim in the last. mask out 0 element in input sequence
         # text_emb = tf.random.uniform(shape=[itemnum + 1, 300], minval=0, maxval=1, dtype=tf.float32, seed=10)  # my code
         with tf.variable_scope("SASRec", reuse=reuse):
             # sequence embedding, item embedding table
-            self.seq, item_emb_table = embedding(self.input_seq,
+            self.seq, id_emb_table = embedding(self.input_seq,
                                                  vocab_size=itemnum + 1,
                                                  num_units=args.hidden_units,
                                                  zero_pad=True,
@@ -79,7 +79,7 @@ class Model():
                     self.seq *= mask
 
             self.seq = normalize(self.seq)
-
+        item_emb_table = id_emb_table + text_emb_table
         pos = tf.reshape(pos, [tf.shape(self.input_seq)[0] * args.maxlen])
         neg = tf.reshape(neg, [tf.shape(self.input_seq)[0] * args.maxlen])
         pos_emb = tf.nn.embedding_lookup(item_emb_table, pos)   # retrieve embeddings for pos from shared embedding mat

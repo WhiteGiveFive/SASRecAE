@@ -411,7 +411,11 @@ def text_embedding(inputs,
 # inputs = tf.to_int32(tf.reshape(tf.range(2*3), (2, 3)))
 # reg = tf.constant([[2, 2, 2], [2, 2, 2]])
 # outputs = reg + inputs
+# inputs = tf.to_int32(tf.range(2*3))
+# mask = tf.expand_dims(tf.to_float(tf.not_equal(inputs, 0)), -1)
+# outputs = tf.to_float(tf.reshape(tf.range(18), (6, 3)))
+# outputs = outputs * mask
 # with tf.Session() as sess:
 #     sess.run(tf.global_variables_initializer())
 #     print(sess.run(outputs))
-#     print(sess.run(tf.shape(outputs)))
+#     print(sess.run(tf.shape(mask)))
