@@ -3,7 +3,10 @@ import copy
 import random
 import numpy as np
 from collections import defaultdict
-
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
+import os
 
 def data_partition(fname):
     """
@@ -143,3 +146,111 @@ def evaluate_valid(model, dataset, args, sess):
             sys.stdout.flush()
 
     return NDCG / valid_user, HT / valid_user
+
+
+# my code, for showing the heatmap of attention weights from trained model
+def show_attention(model, dataset, args, sess, epoch):
+    """
+    This function collects the attention weights from the last self-attention layer. and save the heatmap
+    :param model: trained SASRec model
+    :param dataset: 3 dictionaries of train, valid and test.
+    :param args: containing maxlen
+    :param sess:
+    :return: attention weights
+    """
+    [train, valid, test, usernum, itemnum] = copy.deepcopy(dataset)
+
+    # valid_user = 0.0
+
+    # if usernum>10000:
+    #     users = random.sample(xrange(1, usernum + 1), 10000)    # maximum sample 100000 users
+    # else:
+    #     users = xrange(1, usernum + 1)
+    text_emb = np.load('data/reviews_emb.npy')
+    u = 11 # random sample one single user, set to user 11 first
+    # for u in users:
+
+        # if len(train[u]) < 1 or len(test[u]) < 1: continue  # no train and
+
+    seq = np.zeros([args.maxlen], dtype=np.int32)   # zero array with shape (maxlen,)
+    idx = args.maxlen - 1   # 200-1
+    seq[idx] = valid[u][0]  # the last element of seq is set to valid set of user u
+    idx -= 1    # 199-1
+    for i in reversed(train[u]):
+        seq[idx] = i    # set the remaining maxlen-1 elements of seq to train[u]
+        idx -= 1
+        if idx == -1: break
+    rated = set(train[u])
+    rated.add(0)
+    item_idx = [test[u][0]]
+    for _ in range(100):    # for each user, randomly sample 100 negative items that are not in training set.
+        t = np.random.randint(1, itemnum + 1)
+        while t in rated: t = np.random.randint(1, itemnum + 1)
+        item_idx.append(t)  # get the 101 items, 100 negative items and 1 test item
+
+    attention = model.att_weight(sess, [u], [seq], item_idx, text_emb)    # the reason that seq is shifted lies here, we make prediction on test item
+
+    # draw heatmap of attention weights and save
+    fig = plt.figure(figsize=(16, 8))
+    ax = fig.add_subplot(1, 1, 1)
+    ax.matshow(attention[0][-12:, :], cmap='viridis')
+    fontdict = {'fontsize': 10}
+
+    ax.set_xticks(range(args.maxlen))
+    ax.set_yticks(range(args.maxlen))
+
+    ax.set_xticklabels(seq.tolist(), fontdict=fontdict, rotation=90)
+    ax.set_yticklabels(seq.tolist(), fontdict=fontdict)
+
+    ax.set_xlabel('Attention weights for user {}'.format(u))
+
+    if not os.path.isdir(args.dataset + '_' + args.train_dir + '/attention'):
+        os.makedirs(args.dataset + '_' + args.train_dir + '/attention')
+    plt.savefig(os.path.join(args.dataset + '_' + args.train_dir + '/attention', 'AttentionWeights'+str(epoch)))
+    print('heatmap on epoch {} is saved'.format(epoch))
+
+    return attention
+
+
+# my code,
+def show_emb(model, dataset, args, sess):
+    """
+    This function collects the attention weights from the last self-attention layer. and save the heatmap
+    :param model: trained SASRec model
+    :param dataset: 3 dictionaries of train, valid and test.
+    :param args: containing maxlen
+    :param sess:
+    :return: attention weights
+    """
+    [train, valid, test, usernum, itemnum] = copy.deepcopy(dataset)
+
+    # valid_user = 0.0
+
+    # if usernum>10000:
+    #     users = random.sample(xrange(1, usernum + 1), 10000)    # maximum sample 100000 users
+    # else:
+    #     users = xrange(1, usernum + 1)
+    text_emb = np.load('data/reviews_emb.npy')
+    u = 11 # random sample one single user, set to user 11 first
+    # for u in users:
+
+        # if len(train[u]) < 1 or len(test[u]) < 1: continue  # no train and
+
+    seq = np.zeros([args.maxlen], dtype=np.int32)   # zero array with shape (maxlen,)
+    idx = args.maxlen - 1   # 200-1
+    seq[idx] = valid[u][0]  # the last element of seq is set to valid set of user u
+    idx -= 1    # 199-1
+    for i in reversed(train[u]):
+        seq[idx] = i    # set the remaining maxlen-1 elements of seq to train[u]
+        idx -= 1
+        if idx == -1: break
+    rated = set(train[u])
+    rated.add(0)
+    item_idx = [test[u][0]]
+    for _ in range(100):    # for each user, randomly sample 100 negative items that are not in training set.
+        t = np.random.randint(1, itemnum + 1)
+        while t in rated: t = np.random.randint(1, itemnum + 1)
+        item_idx.append(t)  # get the 101 items, 100 negative items and 1 test item
+
+    embeddings = model.emb_table(sess, [u], [seq], item_idx, text_emb)    # the reason that seq is shifted lies here, we make prediction on test item
+    return embeddings

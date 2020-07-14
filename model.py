@@ -16,16 +16,16 @@ class Model():
         with tf.variable_scope("SASRec", reuse=reuse):
             # sequence embedding, item embedding table
             self.seq, id_emb_table = embedding(self.input_seq,
-                                                 vocab_size=itemnum + 1,
-                                                 num_units=args.hidden_units,
-                                                 zero_pad=True,
-                                                 scale=True,
-                                                 l2_reg=args.l2_emb,
-                                                 scope="input_embeddings",
-                                                 with_t=True,
-                                                 reuse=reuse
-                                                 )  # itemnum+1 for adding zero embedding for padding item
-
+                                               vocab_size=itemnum + 1,
+                                               num_units=args.hidden_units,
+                                               zero_pad=True,
+                                               scale=True,
+                                               l2_reg=args.l2_emb,
+                                               scope="input_embeddings",
+                                               with_t=True,
+                                               reuse=reuse
+                                               )  # itemnum+1 for adding zero embedding for padding item
+            # my code, adding text embedding
             text, text_emb_table = text_embedding(self.input_seq,
                                                   self.text_emb,
                                                   num_units=args.hidden_units,
@@ -64,14 +64,15 @@ class Model():
                 with tf.variable_scope("num_blocks_%d" % i):
 
                     # Self-attention
-                    self.seq = multihead_attention(queries=normalize(self.seq),
-                                                   keys=self.seq,
-                                                   num_units=args.hidden_units,
-                                                   num_heads=args.num_heads,
-                                                   dropout_rate=args.dropout_rate,
-                                                   is_training=self.is_training,
-                                                   causality=True,
-                                                   scope="self_attention")
+                    self.seq, self.attention = multihead_attention(queries=normalize(self.seq),
+                                                                   keys=self.seq,
+                                                                   num_units=args.hidden_units,
+                                                                   num_heads=args.num_heads,
+                                                                   dropout_rate=args.dropout_rate,
+                                                                   is_training=self.is_training,
+                                                                   causality=True,
+                                                                   scope="self_attention",
+                                                                   with_qk=True)
 
                     # Feed forward
                     self.seq = feedforward(normalize(self.seq), num_units=[args.hidden_units, args.hidden_units],
@@ -79,7 +80,8 @@ class Model():
                     self.seq *= mask
 
             self.seq = normalize(self.seq)
-        item_emb_table = id_emb_table + text_emb_table
+        item_emb_table = id_emb_table + text_emb_table  # my code, combine the id and text embeddings.
+        self.item_emb_table = item_emb_table    # my code, for extracting embedding table
         pos = tf.reshape(pos, [tf.shape(self.input_seq)[0] * args.maxlen])
         neg = tf.reshape(neg, [tf.shape(self.input_seq)[0] * args.maxlen])
         pos_emb = tf.nn.embedding_lookup(item_emb_table, pos)   # retrieve embeddings for pos from shared embedding mat
@@ -122,4 +124,14 @@ class Model():
 
     def predict(self, sess, u, seq, item_idx, text_emb):
         return sess.run(self.test_logits,
+                        {self.u: u, self.input_seq: seq, self.test_item: item_idx, self.text_emb: text_emb, self.is_training: False})
+
+    # my code, for extracting attention weights from the model
+    def att_weight(self, sess, u, seq, item_idx, text_emb):
+        return sess.run(self.attention,
+                        {self.u: u, self.input_seq: seq, self.test_item: item_idx, self.text_emb: text_emb, self.is_training: False})
+
+    # my code, for extracting embedding table from the model
+    def emb_table(self, sess, u, seq, item_idx, text_emb):
+        return sess.run(self.item_emb_table,
                         {self.u: u, self.input_seq: seq, self.test_item: item_idx, self.text_emb: text_emb, self.is_training: False})

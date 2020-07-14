@@ -201,13 +201,14 @@ def multihead_attention(queries,
   
         # Activation
         outputs = tf.nn.softmax(outputs) # (h*N, T_q, T_k)
-         
+
         # Query Masking
         query_masks = tf.sign(tf.abs(tf.reduce_sum(queries, axis=-1))) # (N, T_q)
         query_masks = tf.tile(query_masks, [num_heads, 1]) # (h*N, T_q)
         query_masks = tf.tile(tf.expand_dims(query_masks, -1), [1, 1, tf.shape(keys)[1]]) # (h*N, T_q, T_k)
         outputs *= query_masks # broadcasting. (N, T_q, C)
-          
+        # attention = tf.transpose(outputs, [0, 2, 1])
+        attention = outputs
         # Dropouts
         outputs = tf.layers.dropout(outputs, rate=dropout_rate, training=tf.convert_to_tensor(is_training))
                
@@ -223,7 +224,7 @@ def multihead_attention(queries,
         # Normalize
         #outputs = normalize(outputs) # (N, T_q, C)
  
-    if with_qk: return Q,K
+    if with_qk: return outputs, attention
     else: return outputs
 
 
@@ -407,15 +408,18 @@ def text_embedding(inputs,
 # x = tf.placeholder(dtype=tf.float32, shape=[None, 3])
 # m = np.random.randn(2, 3)
 # y = x**2
-#
 # inputs = tf.to_int32(tf.reshape(tf.range(2*3), (2, 3)))
 # reg = tf.constant([[2, 2, 2], [2, 2, 2]])
 # outputs = reg + inputs
 # inputs = tf.to_int32(tf.range(2*3))
+# temp = inputs
+# increment = tf.ones((2, 3), dtype=tf.int32)
+# temp = temp + increment
 # mask = tf.expand_dims(tf.to_float(tf.not_equal(inputs, 0)), -1)
 # outputs = tf.to_float(tf.reshape(tf.range(18), (6, 3)))
 # outputs = outputs * mask
 # with tf.Session() as sess:
 #     sess.run(tf.global_variables_initializer())
-#     print(sess.run(outputs))
-#     print(sess.run(tf.shape(mask)))
+#     print(type(sess.run(temp)))
+#     temp_np = sess.run(temp)
+#     print(sess.run(inputs))

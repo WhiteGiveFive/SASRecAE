@@ -51,6 +51,7 @@ sess = tf.Session(config=config)    # Driver for Graph execution
 
 sampler = WarpSampler(user_train, usernum, itemnum, batch_size=args.batch_size, maxlen=args.maxlen, n_workers=3)
 text_emb = np.load('data/reviews_emb.npy')  # my code, loading the text embedding of item
+print('The loaded embedding type is {}'.format(text_emb.dtype)) # my code, show loaded embedding's data type
 # text_emb = np.random.rand(itemnum+1, 300)   # my code, for text embeddings
 # text_emb = tf.random.uniform(shape=[itemnum+1, 300], minval=0, maxval=1, dtype=tf.float32, seed=10)  # my code
 model = Model(usernum, itemnum, args)
@@ -72,6 +73,17 @@ try:
         if epoch % 1 == 0:
             t1 = time.time() - t0
             T += t1
+            print 'attention weights'
+            attention = show_attention(model, dataset, args, sess, epoch)   # my code, for show attention
+            if not os.path.isdir(args.dataset + '_' + args.train_dir + '/attention'):
+                os.makedirs(args.dataset + '_' + args.train_dir + '/attention')
+            np.save(os.path.join(args.dataset + '_' + args.train_dir + '/attention', 'attention'+str(epoch)+'.npy'), attention)
+            print('extracting embeddings')
+            item_emb = show_emb(model, dataset, args, sess) # my code, for extracting and saving item embeddings
+            if not os.path.isdir(args.dataset + '_' + args.train_dir + '/itemb'):
+                os.makedirs(args.dataset + '_' + args.train_dir + '/itemb')
+            np.save(os.path.join(args.dataset + '_' + args.train_dir + '/itemb', 'item_emb_'+str(epoch)+'.npy'), item_emb)
+            print('item embedding on epoch {} is saved'.format(epoch))
             print 'Evaluating',
             t_test = evaluate(model, dataset, args, sess)
             t_valid = evaluate_valid(model, dataset, args, sess)
@@ -79,7 +91,7 @@ try:
             print 'epoch:%d, time: %f(s), valid (NDCG@10: %.4f, HR@10: %.4f), test (NDCG@10: %.4f, HR@10: %.4f)' % (
             epoch, T, t_valid[0], t_valid[1], t_test[0], t_test[1])
 
-            f.write(str(t_valid) + ' ' + str(t_test) + '\n')
+            f.write(str(t_valid) + ' ' + str(t_test) + ' ' + str(T) + '\n')
             f.flush()
             t0 = time.time()
 except:
